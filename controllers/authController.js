@@ -3,7 +3,7 @@ const otpGenerator = require("otp-generator");
 const crypto = require("crypto");
 const User = require("../models/user");
 const filterObj = require("../utils/filterObj");
-
+const mailService = require("../services/mailer");
 const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 
 //Register New User
@@ -39,6 +39,7 @@ exports.register = async (req, res, next) => {
     next();
   } else {
     // if user is not created before than create a new one
+    console.log(filteredBody);
     const new_user = await User.create(filteredBody);
 
     // generate an otp and send to email
@@ -72,7 +73,8 @@ exports.sendOTP = async (req, res, next) => {
     from: "ak8923307022@gmail.com",
     to: user.email,
     subject: "Verification OTP",
-    html: otp(user.name, new_otp),
+    // html: otp(user.name, new_otp),
+    text: `Your OTP is ${new_otp}. This is valid for 10 mins.`,
     attachments: [],
   });
 
@@ -156,7 +158,7 @@ exports.login = async (req, res, next) => {
   });
 };
 
-exports.protect = catchAsync(async (req, res, next) => {
+exports.protect = async (req, res, next) => {
   // 1) Getting token and check if it's there
   let token;
   if (
@@ -196,9 +198,9 @@ exports.protect = catchAsync(async (req, res, next) => {
   // GRANT ACCESS TO PROTECTED ROUTE
   req.user = this_user;
   next();
-});
+};
 
-exports.forgotPassword = catchAsync(async (req, res, next) => {
+exports.forgotPassword = async (req, res, next) => {
   // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
@@ -220,7 +222,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     console.log(resetURL);
 
     mailService.sendEmail({
-      from: "shreyanshshah242@gmail.com",
+      from: "ak8923307022@gmail.com",
       to: user.email,
       subject: "Reset Password",
       html: resetPassword(user.firstName, resetURL),
@@ -240,9 +242,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       message: "There was an error sending the email. Try again later!",
     });
   }
-});
+};
 
-exports.resetPassword = catchAsync(async (req, res, next) => {
+exports.resetPassword = async (req, res, next) => {
   // 1) Get user based on the token
   const hashedToken = crypto
     .createHash("sha256")
@@ -276,4 +278,4 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     message: "Password Reseted Successfully",
     token,
   });
-});
+};
