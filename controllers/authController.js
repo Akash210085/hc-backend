@@ -4,6 +4,8 @@ const crypto = require("crypto");
 const User = require("../models/user");
 const filterObj = require("../utils/filterObj");
 const mailService = require("../services/mailer");
+const otp = require("../templetes/otp");
+const resetPassword = require("../templetes/resetPassword");
 const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 
 //Register New User
@@ -72,8 +74,8 @@ exports.sendOTP = async (req, res, next) => {
   mailService.sendEmail({
     from: "ak8923307022@gmail.com",
     to: user.email,
-    subject: "Verification OTP",
-    // html: otp(user.name, new_otp),
+    subject: "OTP Verification",
+    html: otp(user.name, new_otp),
     text: `Your OTP is ${new_otp}. This is valid for 10 mins.`,
     attachments: [],
   });
@@ -142,11 +144,13 @@ exports.login = async (req, res, next) => {
   }
 
   const user = await User.findOne({ email: email }).select("+password");
-  if (!user || (await user.correctPassword(password, user.password))) {
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
     res.status(400).json({
       status: "error",
       message: "Email or Password is incorrect",
     });
+    return;
   }
 
   const token = signToken(user._id);
@@ -225,7 +229,8 @@ exports.forgotPassword = async (req, res, next) => {
       from: "ak8923307022@gmail.com",
       to: user.email,
       subject: "Reset Password",
-      html: resetPassword(user.firstName, resetURL),
+      text: "Click on below link to reset your password",
+      html: resetPassword(user.name, resetURL),
       attachments: [],
     });
 

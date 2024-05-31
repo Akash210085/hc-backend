@@ -91,9 +91,10 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password") || !this.password) return next();
 
   // Hash the password with cost of 12
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = await bcrypt.hash(this.password.toString(), 12);
 
-  //! Shift it to next hook // this.passwordChangedAt = Date.now() - 1000;
+  // ! Shift it to next hook
+  this.passwordChangedAt = Date.now() - 1000;
 
   next();
 });

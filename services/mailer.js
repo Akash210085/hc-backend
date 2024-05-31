@@ -13,7 +13,7 @@ const sendSGMail = async ({ to, sender, subject, html, attachments, text }) => {
       from: from, // Change to your verified sender
       subject: subject,
       html: html,
-      // text: text,
+      text: text,
       attachments,
     };
 
