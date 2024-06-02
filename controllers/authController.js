@@ -89,6 +89,18 @@ exports.sendOTP = async (req, res, next) => {
 exports.verifyOTP = async (req, res, next) => {
   // verify otp and update user accordingly
   const { email, otp } = req.body;
+
+  const userFound = await User.findOne({
+    email,
+  });
+
+  if (!userFound) {
+    return res.status(400).json({
+      status: "error",
+      message: "User is not found",
+    });
+  }
+
   const user = await User.findOne({
     email,
     otp_expiry_time: { $gt: Date.now() },
@@ -220,7 +232,7 @@ exports.forgotPassword = async (req, res, next) => {
 
   // 3) Send it to user's email
   try {
-    const resetURL = `http://localhost:3000/auth/new-password?token=${resetToken}`;
+    const resetURL = `http://localhost:3000/auth/reset-password?token=${resetToken}`;
     // TODO => Send Email with this Reset URL to user's email address
 
     console.log(resetURL);
@@ -236,7 +248,8 @@ exports.forgotPassword = async (req, res, next) => {
 
     res.status(200).json({
       status: "success",
-      message: "Token sent to email!",
+      message:
+        "Reset link is sent to  your email, Please visite your inbox to reset password!",
     });
   } catch (err) {
     user.passwordResetToken = undefined;
@@ -265,7 +278,7 @@ exports.resetPassword = async (req, res, next) => {
   if (!user) {
     return res.status(400).json({
       status: "error",
-      message: "Token is Invalid or Expired",
+      message: "Reset Link is Invalid or Expired",
     });
   }
   user.password = req.body.password;
