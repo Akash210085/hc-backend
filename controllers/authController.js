@@ -6,6 +6,7 @@ const filterObj = require("../utils/filterObj");
 const mailService = require("../services/mailer");
 const otp = require("../templetes/otp");
 const resetPassword = require("../templetes/resetPassword");
+const { promisify } = require("util");
 const signToken = (userId) => jwt.sign({ userId }, process.env.JWT_SECRET);
 
 //Register New User
@@ -165,6 +166,14 @@ exports.login = async (req, res, next) => {
     return;
   }
 
+  if (!user.verified) {
+    res.status(400).json({
+      status: "error",
+      message: "Email is not verified, Please verify the email",
+    });
+    return;
+  }
+
   const token = signToken(user._id);
 
   res.status(200).json({
@@ -176,6 +185,7 @@ exports.login = async (req, res, next) => {
 
 exports.protect = async (req, res, next) => {
   // 1) Getting token and check if it's there
+  // console.log("hello");
   let token;
   if (
     req.headers.authorization &&
@@ -185,7 +195,7 @@ exports.protect = async (req, res, next) => {
   } else if (req.cookies.jwt) {
     token = req.cookies.jwt;
   }
-
+  console.log(token);
   if (!token) {
     return res.status(401).json({
       message: "You are not logged in! Please log in to get access.",
