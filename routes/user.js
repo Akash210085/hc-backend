@@ -10,4 +10,9 @@ router.post(
   userController.addAppointment
 );
 router.get("/get-me", authController.protect, userController.getMe);
+router.get(
+  "/get-appointments",
+  authController.protect,
+  userController.getAppointments
+);
 module.exports = router;

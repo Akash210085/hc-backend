@@ -18,7 +18,10 @@ exports.register = async (req, res, next) => {
     "name",
     "rollNo",
     "email",
-    "password"
+    "password",
+    "contactNo",
+    "designation",
+    "role"
   );
   //check if a verfied user with given email exists
 

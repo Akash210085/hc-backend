@@ -2,38 +2,6 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
-const appointmentSchema = new mongoose.Schema({
-  id: {
-    type: Number, // Assuming 'id' is an ObjectId
-    required: true,
-  },
-  appointmentType: {
-    type: String,
-    required: true,
-  },
-  category: {
-    type: String,
-    required: true,
-  },
-  doctorName: {
-    type: String,
-    required: true,
-  },
-  preferredSlot: {
-    type: String, // Assuming 'preferredSlot' is a Date
-    required: true,
-  },
-  reasonForAppointment: {
-    type: String,
-    required: true,
-  },
-  status: {
-    type: String,
-    enum: ["Pending", "Confirmed", "Cancelled"], // Example statuses
-    required: true,
-  },
-});
-
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -41,7 +9,9 @@ const userSchema = new mongoose.Schema({
   },
   rollNo: {
     type: Number,
-    required: [true, "Roll No is required"],
+    required: function () {
+      return this.role === "student" ? [true, "Roll No is required"] : false;
+    },
   },
   email: {
     type: String,
@@ -104,7 +74,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["Online", "Offline"],
   },
-  appointmentList: [appointmentSchema],
+
+  role: {
+    type: String,
+  },
+  contactNo: {
+    type: String,
+  },
+  designation: {
+    type: String,
+  },
 });
 
 userSchema.pre("save", async function (next) {
