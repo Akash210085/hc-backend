@@ -60,6 +60,17 @@ exports.getAppointments = async (req, res, next) => {
   });
 };
 
+exports.getSlot = async (req, res, next) => {
+  const userId = req.user._id;
+  console.log("userId", userId);
+  const allSlots = await Slot.findOne({ id: userId });
+  console.log(allSlots);
+  res.status(200).json({
+    status: "successfully fetched slotData",
+    data: allSlots,
+  });
+};
+
 exports.addSlot = async (req, res, next) => {
   const newSlot = req.body;
 

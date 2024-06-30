@@ -11,6 +11,7 @@ router.post(
 );
 router.post("/profile", authController.protect, userController.addSlot);
 router.get("/get-me", authController.protect, userController.getMe);
+router.get("/profile", authController.protect, userController.getSlot);
 router.get(
   "/get-appointments",
   authController.protect,
