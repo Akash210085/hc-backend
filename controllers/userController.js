@@ -27,8 +27,8 @@ exports.addAppointment = async (req, res, next) => {
   console.log("hiii", newAppointment);
 
   const new_appointment = await Appointment.create(newAppointment);
-  console.log("new appointment is created", new_user);
-  if (new_user) {
+  console.log("new appointment is created", new_appointment);
+  if (new_appointment) {
     res.status(200).json({
       status: "success",
       data: new_appointment,
@@ -68,6 +68,15 @@ exports.getSlot = async (req, res, next) => {
   res.status(200).json({
     status: "successfully fetched slotData",
     data: allSlots,
+  });
+};
+
+exports.getAllSlots = async (req, res, next) => {
+  const allSlotData = await Slot.find({});
+  console.log("allSlotDtata:::", allSlotData);
+  res.status(200).json({
+    status: "successfully fetched slotData",
+    data: allSlotData,
   });
 };
 

@@ -17,4 +17,5 @@ router.get(
   authController.protect,
   userController.getAppointments
 );
+router.get("/get-allSlots", authController.protect, userController.getAllSlots);
 module.exports = router;
