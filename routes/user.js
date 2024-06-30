@@ -9,6 +9,7 @@ router.post(
   authController.protect,
   userController.addAppointment
 );
+router.post("/profile", authController.protect, userController.addSlot);
 router.get("/get-me", authController.protect, userController.getMe);
 router.get(
   "/get-appointments",

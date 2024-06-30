@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const filterObj = require("../utils/filterObj");
 const Appointment = require("../models/appointment");
+const Slot = require("../models/slot");
 
 exports.updateMe = async (req, res, next) => {
   const filteredBody = filterObj(
@@ -25,8 +26,20 @@ exports.addAppointment = async (req, res, next) => {
 
   console.log("hiii", newAppointment);
 
-  const new_user = await Appointment.create(newAppointment);
+  const new_appointment = await Appointment.create(newAppointment);
   console.log("new appointment is created", new_user);
+  if (new_user) {
+    res.status(200).json({
+      status: "success",
+      data: new_appointment,
+      message: "New Appointment created successfully",
+    });
+  } else {
+    res.status(400).json({
+      status: "error",
+      message: "Not Able to add appointment.Please try after some time",
+    });
+  }
 };
 
 exports.getMe = async (req, res, next) => {
@@ -45,4 +58,38 @@ exports.getAppointments = async (req, res, next) => {
     status: "success",
     data: allAppointments,
   });
+};
+
+exports.addSlot = async (req, res, next) => {
+  const newSlot = req.body;
+
+  console.log("hiii", newSlot);
+  const existing_slot = await Slot.findOne({ id: req.body.id });
+  if (existing_slot) {
+    await Slot.findOneAndUpdate({ id: req.body.id }, newSlot, {
+      new: true,
+      validateModifiedOnly: true,
+    });
+    res.status(200).json({
+      status: "success",
+      data: existing_slot,
+      message: "Slots updated successfully",
+    });
+
+    return;
+  }
+  const new_slot = await Slot.create(newSlot);
+  console.log("new slot is created", new_slot);
+  if (new_slot) {
+    res.status(200).json({
+      status: "success",
+      data: new_slot,
+      message: "New Slots created successfully",
+    });
+  } else {
+    res.status(400).json({
+      status: "error",
+      message: "Not Able to add Slots.Please try after some time",
+    });
+  }
 };

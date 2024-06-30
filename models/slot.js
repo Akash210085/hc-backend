@@ -8,7 +8,7 @@ const slotSchema = new mongoose.Schema({
   category: {
     type: String,
   },
-  doctorName: {
+  name: {
     type: String,
   },
   certified: {
