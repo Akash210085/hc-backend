@@ -51,8 +51,15 @@ exports.getMe = async (req, res, next) => {
 
 exports.getAppointments = async (req, res, next) => {
   const userId = req.user._id;
-  console.log("userId", userId);
-  const allAppointments = await Appointment.find({ from: userId });
+  const role = req.user.role;
+  let allAppointments;
+  if (role === "student") {
+    allAppointments = await Appointment.find({ from: userId });
+  } else if (role === "doctor") {
+    console.log(userId);
+    allAppointments = await Appointment.find({ to: userId });
+    console.log("doctor appoint ment: ", allAppointments);
+  }
   console.log(allAppointments);
   res.status(200).json({
     status: "success",
@@ -66,7 +73,7 @@ exports.getSlot = async (req, res, next) => {
   const allSlots = await Slot.findOne({ id: userId });
   console.log(allSlots);
   res.status(200).json({
-    status: "successfully fetched slotData",
+    status: "success",
     data: allSlots,
   });
 };
@@ -75,7 +82,7 @@ exports.getAllSlots = async (req, res, next) => {
   const allSlotData = await Slot.find({});
   console.log("allSlotDtata:::", allSlotData);
   res.status(200).json({
-    status: "successfully fetched slotData",
+    status: "success",
     data: allSlotData,
   });
 };
@@ -110,6 +117,40 @@ exports.addSlot = async (req, res, next) => {
     res.status(400).json({
       status: "error",
       message: "Not Able to add Slots.Please try after some time",
+    });
+  }
+};
+
+exports.approveRejectAppointment = async (req, res, next) => {
+  const { id } = req.params;
+  const newStatus = req.body;
+  const updated_appointment = await Appointment.findByIdAndUpdate(
+    id,
+    newStatus,
+    {
+      new: true,
+    }
+  );
+  if (!updated_appointment) {
+    res.status(404).json({
+      status: "error",
+      message: "Not able to Approve or Reject the request. Please try later",
+      data: updated_appointment,
+    });
+    return;
+  }
+  console.log("statusValue: ", newStatus);
+  if (newStatus.status === "Approved") {
+    res.status(200).json({
+      status: "success",
+      message: "Successfully Approved the request!",
+      data: updated_appointment,
+    });
+  } else {
+    res.status(200).json({
+      status: "success",
+      message: "successfully Rejected the request",
+      data: updated_appointment,
     });
   }
 };

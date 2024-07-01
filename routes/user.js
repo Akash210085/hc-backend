@@ -4,6 +4,11 @@ const userController = require("../controllers/userController");
 const authController = require("../controllers/authController");
 
 router.patch("/update-me", authController.protect, userController.updateMe);
+router.patch(
+  "/dashboard/:id",
+  authController.protect,
+  userController.approveRejectAppointment
+);
 router.post(
   "/dashboard",
   authController.protect,

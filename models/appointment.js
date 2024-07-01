@@ -25,6 +25,10 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  studentName: {
+    type: String,
+    required: true,
+  },
   preferredSlot: {
     type: String, // Assuming 'preferredSlot' is a Date
     required: true,
