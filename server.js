@@ -75,6 +75,50 @@ io.on("connection", async (socket) => {
     });
   });
 
+  socket.on("approve_reject_appointment", async (data) => {
+    const { id, status } = data;
+
+    // console.log("appoint sfv:", data);
+
+    const updated_appointment = await Appointment.findByIdAndUpdate(
+      id,
+      { status: status },
+      {
+        new: true,
+      }
+    );
+    if (!updated_appointment) {
+      res.status(404).json({
+        status: "error",
+        message: "Not able to Approve or Reject the request. Please try later",
+        data: updated_appointment,
+      });
+      return;
+    }
+    const to_id = updated_appointment.to;
+    const from_id = updated_appointment.from;
+    const to = await User.findById(to_id).select("socket_id");
+    const from = await User.findById(from_id).select("socket_id");
+
+    // emit event request received to recipient
+    io.to(to?.socket_id).emit("approve_reject_sent", {
+      message:
+        status === "Approved"
+          ? "You have successfully approved the request"
+          : "You have successfully rejected the request",
+      status: "success",
+      data: updated_appointment,
+    });
+    io.to(from?.socket_id).emit("approve_reject_recieved", {
+      message:
+        status === "Approved"
+          ? "Your Request is approved!"
+          : "Your Request is Rejected",
+      status: status === "Approved" ? "success" : "error",
+      data: updated_appointment,
+    });
+  });
+
   socket.on("end", async (data) => {
     // Find user by ID and set status as offline
     console.log("logout data: ", data);
