@@ -9,11 +9,11 @@ router.patch(
   authController.protect,
   userController.approveRejectAppointment
 );
-router.post(
-  "/dashboard",
-  authController.protect,
-  userController.addAppointment
-);
+// router.post(
+//   "/dashboard",
+//   authController.protect,
+//   userController.addAppointment
+// );
 router.post("/profile", authController.protect, userController.addSlot);
 router.get("/get-me", authController.protect, userController.getMe);
 router.get("/profile", authController.protect, userController.getSlot);

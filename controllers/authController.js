@@ -45,7 +45,7 @@ exports.register = async (req, res, next) => {
     next();
   } else {
     // if user is not created before than create a new one
-    console.log(filteredBody);
+    // console.log(filteredBody);
     const new_user = await User.create(filteredBody);
 
     // generate an otp and send to email
@@ -183,6 +183,7 @@ exports.login = async (req, res, next) => {
     status: "success",
     message: "Logged in successfully",
     token,
+    user_id: user._id,
   });
 };
 
@@ -198,7 +199,7 @@ exports.protect = async (req, res, next) => {
   } else if (req.cookies.jwt) {
     token = req.cookies.jwt;
   }
-  console.log(token);
+  // console.log(token);
   if (!token) {
     return res.status(401).json({
       message: "You are not logged in! Please log in to get access.",
@@ -207,7 +208,7 @@ exports.protect = async (req, res, next) => {
   // 2) Verification of token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-  console.log(decoded);
+  // console.log(decoded);
 
   // 3) Check if user still exists
 
@@ -248,7 +249,7 @@ exports.forgotPassword = async (req, res, next) => {
     const resetURL = `http://localhost:3000/auth/reset-password?token=${resetToken}`;
     // TODO => Send Email with this Reset URL to user's email address
 
-    console.log(resetURL);
+    // console.log(resetURL);
 
     mailService.sendEmail({
       from: "ak8923307022@gmail.com",

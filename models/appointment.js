@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema({
   to: {
-    type: String,
-    // ref: "User",
+    type: mongoose.Schema.ObjectId,
+    ref: "User",
   },
   from: {
     type: mongoose.Schema.ObjectId,
@@ -39,7 +39,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Pending", "Confirmed", "Cancelled"], // Example statuses
+    enum: ["Pending", "Approved", "Rejected"], // Example statuses
     required: true,
   },
 });
