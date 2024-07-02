@@ -87,14 +87,7 @@ io.on("connection", async (socket) => {
         new: true,
       }
     );
-    if (!updated_appointment) {
-      res.status(404).json({
-        status: "error",
-        message: "Not able to Approve or Reject the request. Please try later",
-        data: updated_appointment,
-      });
-      return;
-    }
+
     const to_id = updated_appointment.to;
     const from_id = updated_appointment.from;
     const to = await User.findById(to_id).select("socket_id");
@@ -104,17 +97,45 @@ io.on("connection", async (socket) => {
     io.to(to?.socket_id).emit("approve_reject_sent", {
       message:
         status === "Approved"
-          ? "You have successfully approved the request"
-          : "You have successfully rejected the request",
+          ? `You have successfully approved the request of ${updated_appointment.studentName}`
+          : `You have successfully rejected the request of ${updated_appointment.studentName}`,
       status: "success",
       data: updated_appointment,
     });
     io.to(from?.socket_id).emit("approve_reject_recieved", {
       message:
         status === "Approved"
-          ? "Your Request is approved!"
-          : "Your Request is Rejected",
+          ? `Your Request is Approved by ${updated_appointment.doctorName}`
+          : `Your Request is Rejected by ${updated_appointment.doctorName}`,
       status: status === "Approved" ? "success" : "error",
+      data: updated_appointment,
+    });
+  });
+
+  socket.on("add_remark", async (data) => {
+    const { id, remark } = data;
+    console.log("this is data", data);
+    const updated_appointment = await Appointment.findByIdAndUpdate(
+      id,
+      { remark: remark },
+      {
+        new: true,
+      }
+    );
+    const to_id = updated_appointment.to;
+    const from_id = updated_appointment.from;
+    const to = await User.findById(to_id).select("socket_id");
+    const from = await User.findById(from_id).select("socket_id");
+
+    io.to(to?.socket_id).emit("remark_sent", {
+      message: `Remark is sent to ${updated_appointment.studentName}`,
+      status: "success",
+      data: updated_appointment,
+    });
+
+    io.to(from?.socket_id).emit("remark_recieved", {
+      message: `${updated_appointment.doctorName} sent your a remark`,
+      status: "success",
       data: updated_appointment,
     });
   });
