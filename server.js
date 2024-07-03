@@ -1,6 +1,13 @@
 const app = require("./app");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+// const multer = require("multer");
+// const GridFsStorage = require("multer");
+// const Grid = require("gridfs-stream");
+// const methodOverride = require("method-override");
+
+// app.use(methodOverride("_method"));
+
 dotenv.config({ path: "./config.env" });
 
 process.on("uncaughtException", (err) => {
@@ -34,6 +41,42 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
+
+// mongoose
+//   .connect(DB)
+//   .then(() => {
+//     console.log("DB connection is successful");
+//     // Initialize gfs once the connection is open
+//     gfs = Grid(mongoose.connection.db, mongoose.mongo);
+//     gfs.collection("uploads");
+//   })
+//   .catch((err) => {
+//     console.error(err);
+//   });
+
+// mongoose.connection
+//   .once("open", () => {
+//     console.log("Connection open, GridFS initialized");
+//   })
+//   .on("error", (error) => {
+//     console.error("Some error", error);
+//   });
+
+// const storage = new GridFsStorage({
+//   url: DB,
+//   file: (req, file) => {
+//     return new Promise((resolve, reject) => {
+//       const filename = file.originalname;
+//       const fileInfo = {
+//         filename: filename,
+//         bucketName: "uploads",
+//       };
+//       resolve(fileInfo);
+//     });
+//   },
+// });
+
+// const upload = multer({ storage });
 
 const port = process.env.PORT || 8000;
 server.listen(port, () => {
@@ -114,7 +157,7 @@ io.on("connection", async (socket) => {
 
   socket.on("add_remark", async (data) => {
     const { id, remark } = data;
-    console.log("this is data", data);
+    // console.log("this is data", data);
     const updated_appointment = await Appointment.findByIdAndUpdate(
       id,
       { remark: remark },
@@ -142,7 +185,7 @@ io.on("connection", async (socket) => {
 
   socket.on("end", async (data) => {
     // Find user by ID and set status as offline
-    console.log("logout data: ", data);
+    // console.log("logout data: ", data);
     if (data.user_id) {
       await User.findByIdAndUpdate(data.user_id, { status: "Offline" });
     }

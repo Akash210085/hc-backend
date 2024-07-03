@@ -13,7 +13,18 @@ const slotSchema = new mongoose.Schema({
   },
   certified: {
     type: Boolean,
+    default: false,
   },
+
+  editFile: {
+    type: Boolean,
+    default: true,
+  },
+
+  fileName: {
+    type: String,
+  },
+
   slots: [
     {
       type: String, // Assuming 'preferredSlot' is a Date

@@ -58,7 +58,7 @@ exports.getAppointments = async (req, res, next) => {
   } else if (role === "doctor") {
     // console.log(userId);
     allAppointments = await Appointment.find({ to: userId });
-    console.log("doctor appoint ment: ", allAppointments);
+    // console.log("doctor appoint ment: ", allAppointments);
   }
   // console.log(allAppointments);
   res.status(200).json({
@@ -121,36 +121,84 @@ exports.addSlot = async (req, res, next) => {
   }
 };
 
-exports.approveRejectAppointment = async (req, res, next) => {
-  const { id } = req.params;
-  const newStatus = req.body;
-  const updated_appointment = await Appointment.findByIdAndUpdate(
+// exports.approveRejectAppointment = async (req, res, next) => {
+//   const { id } = req.params;
+//   const newStatus = req.body;
+//   const updated_appointment = await Appointment.findByIdAndUpdate(
+//     id,
+//     newStatus,
+//     {
+//       new: true,
+//     }
+//   );
+//   if (!updated_appointment) {
+//     res.status(404).json({
+//       status: "error",
+//       message: "Not able to Approve or Reject the request. Please try later",
+//       data: updated_appointment,
+//     });
+//     return;
+//   }
+//   // console.log("statusValue: ", newStatus);
+//   if (newStatus.status === "Approved") {
+//     res.status(200).json({
+//       status: "success",
+//       message: "Successfully Approved the request!",
+//       data: updated_appointment,
+//     });
+//   } else {
+//     res.status(200).json({
+//       status: "success",
+//       message: "successfully Rejected the request",
+//       data: updated_appointment,
+//     });
+//   }
+// };
+
+exports.submitCertificate = async (req, res, next) => {
+  const { id, category, editFile, certified, name } = req.body;
+
+  const fileName = req.file ? req.file.originalname : null;
+
+  const newSlotData = {
     id,
-    newStatus,
-    {
+    category,
+    editFile,
+    certified,
+    name,
+    fileName,
+  };
+
+  console.log(req.file);
+  console.log("body:", req.body);
+  const existing_slot = await Slot.findOne({ id: req.body.id });
+  if (existing_slot) {
+    await Slot.findOneAndUpdate({ id: req.body.id }, newSlotData, {
       new: true,
-    }
-  );
-  if (!updated_appointment) {
-    res.status(404).json({
-      status: "error",
-      message: "Not able to Approve or Reject the request. Please try later",
-      data: updated_appointment,
+      validateModifiedOnly: true,
     });
+    res.status(200).json({
+      status: "success",
+      data: existing_slot,
+      message: "Successfully updated certificate",
+    });
+
     return;
   }
-  // console.log("statusValue: ", newStatus);
-  if (newStatus.status === "Approved") {
+
+  const new_slot = await Slot.create(newSlotData);
+
+  if (new_slot) {
     res.status(200).json({
       status: "success",
-      message: "Successfully Approved the request!",
-      data: updated_appointment,
+      data: new_slot,
+      message:
+        "File submit successfully. Please wait sometime to get certified",
     });
   } else {
-    res.status(200).json({
-      status: "success",
-      message: "successfully Rejected the request",
-      data: updated_appointment,
+    res.status(400).json({
+      status: "error",
+      message: "Not Able to submit your request.Please try after some time",
     });
   }
 };
