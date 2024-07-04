@@ -27,7 +27,13 @@ router.patch("/update-me", authController.protect, userController.updateMe);
 //   authController.protect,
 //   userController.addAppointment
 // );
+
 router.post("/profile", authController.protect, userController.addSlot);
+router.post(
+  "/chats/add-friend",
+  authController.protect,
+  userController.addFriend
+);
 router.post(
   "/profile/certificate",
   upload.single("file"),
@@ -35,6 +41,11 @@ router.post(
   userController.submitCertificate
 );
 router.get("/get-me", authController.protect, userController.getMe);
+router.get(
+  "/get-all-users",
+  authController.protect,
+  userController.getAllUsers
+);
 router.get("/profile", authController.protect, userController.getSlot);
 router.get(
   "/get-appointments",

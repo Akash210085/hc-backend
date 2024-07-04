@@ -49,6 +49,54 @@ exports.getMe = async (req, res, next) => {
   });
 };
 
+exports.addFriend = async (req, res, next) => {
+  const { friend } = req.body;
+  const my_id = req.user._id;
+  const updatedUser = await User.findOneAndUpdate(
+    { _id: my_id },
+    { $push: { friends: friend } },
+    { new: true }
+  );
+
+  if (updatedUser) {
+    res.status(200).json({
+      status: "success",
+      data: updatedUser,
+      message: "Friend Added successfully",
+    });
+
+    return;
+  } else {
+    res.status(404).json({
+      status: "error",
+      message: "Not able to add friend. Please try after sometime",
+    });
+  }
+};
+
+exports.getAllUsers = async (req, res, next) => {
+  const my_friends = req.user.friends;
+  const my_id = req.user._id;
+  const ids_to_exclude = [my_id, ...my_friends];
+
+  const all_users = await User.find({ _id: { $nin: ids_to_exclude } }).select(
+    "_id name role"
+  );
+
+  if (all_users) {
+    console.log("all users", all_users);
+    res.status(200).json({
+      status: "success",
+      data: all_users,
+    });
+  } else {
+    res.status(404).json({
+      status: "error",
+      data: [],
+    });
+  }
+};
+
 exports.getAppointments = async (req, res, next) => {
   const userId = req.user._id;
   const role = req.user.role;
