@@ -49,6 +49,23 @@ exports.getMe = async (req, res, next) => {
   });
 };
 
+exports.getMyFriends = async (req, res, next) => {
+  const my_id = req.user._id;
+  const me = await User.findOne({ _id: my_id });
+  const my_friends = me.friends; // Array of friend IDs
+  // console.log("myfriends", my_friends);
+  const friendsData = await User.find({ _id: { $in: my_friends } }).select(
+    "_id name status socket_id"
+  );
+
+  // console.log("myfriendData", friendsData);
+
+  res.status(200).json({
+    status: "success",
+    data: friendsData,
+  });
+};
+
 exports.addFriend = async (req, res, next) => {
   const { friend } = req.body;
   const my_id = req.user._id;

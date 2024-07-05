@@ -95,6 +95,20 @@ io.on("connection", async (socket) => {
         socket_id: socket.id,
         status: "Online",
       });
+
+      const user = await User.findOne({ _id: user_id }).select("friends");
+      const my_friends = user.friends;
+      const onlineFriends = await User.find({
+        _id: { $in: my_friends },
+        status: "Online",
+      }).select("socket_id");
+
+      onlineFriends.forEach((friend) => {
+        io.to(friend.socket_id).emit("online_status", {
+          id: user_id,
+          status: "Online",
+        });
+      });
     } catch (e) {
       console.log(e);
     }
@@ -183,12 +197,44 @@ io.on("connection", async (socket) => {
     });
   });
 
+  // socket.on("request_toget_myfriends", async (data) => {
+  //   const { id } = data;
+  //   console.log("this is data", data);
+  //   const me = await User.findOne({ _id: id });
+  //   const my_friends = me.friends;
+  //   const my_socket_id = me.socket_id;
+  //   const friendsData = await User.find({ _id: { $in: my_friends } }).select(
+  //     "_id name status socket_id"
+  //   );
+  //   console.log("friends:", friendsData);
+  //   console.log("socket_id", my_socket_id);
+  //   io.to(my_socket_id).emit("friends_data_sent", {
+  //     status: "success",
+  //     data: friendsData,
+  //   });
+  // });
+
   socket.on("end", async (data) => {
     // Find user by ID and set status as offline
     // console.log("logout data: ", data);
+
     if (data.user_id) {
       await User.findByIdAndUpdate(data.user_id, { status: "Offline" });
     }
+
+    const user = await User.findOne({ _id: data.user_id }).select("friends");
+    const my_friends = user.friends;
+    const onlineFriends = await User.find({
+      _id: { $in: my_friends },
+      status: "Online",
+    }).select("socket_id");
+
+    onlineFriends.forEach((friend) => {
+      io.to(friend.socket_id).emit("online_status", {
+        id: user_id,
+        status: "Offline",
+      });
+    });
 
     // broadcast to all conversation rooms of this user that this user is offline (disconnected)
 

@@ -42,6 +42,11 @@ router.post(
 );
 router.get("/get-me", authController.protect, userController.getMe);
 router.get(
+  "/chats/get-my-friends",
+  authController.protect,
+  userController.getMyFriends
+);
+router.get(
   "/get-all-users",
   authController.protect,
   userController.getAllUsers
