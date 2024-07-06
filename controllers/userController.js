@@ -97,7 +97,7 @@ exports.getAllUsers = async (req, res, next) => {
   const ids_to_exclude = [my_id, ...my_friends];
 
   const all_users = await User.find({ _id: { $nin: ids_to_exclude } }).select(
-    "_id name role"
+    "_id name role status"
   );
 
   if (all_users) {
@@ -144,7 +144,7 @@ exports.getSlot = async (req, res, next) => {
 };
 
 exports.getAllSlots = async (req, res, next) => {
-  const allSlotData = await Slot.find({});
+  const allSlotData = await Slot.find({ certified: true });
   // console.log("allSlotDtata:::", allSlotData);
   res.status(200).json({
     status: "success",

@@ -87,7 +87,6 @@ server.listen(port, () => {
 io.on("connection", async (socket) => {
   console.log(JSON.stringify(socket.handshake.query));
   const user_id = socket.handshake.query["user_id"];
-
   console.log(`User connected ${socket.id}`);
 
   if (user_id != null && Boolean(user_id)) {
@@ -118,12 +117,14 @@ io.on("connection", async (socket) => {
   // We can write our socket event listeners in here...
 
   socket.on("appointment_request", async (data) => {
+    console.log("data", data);
     const to = await User.findById(data.to).select("socket_id");
     const from = await User.findById(data.from).select("socket_id");
 
     // save appointment to database
     const new_appointment = await Appointment.create(data);
     // emit event request received to recipient
+    console.log(new_appointment);
     io.to(to?.socket_id).emit("new_appointment_request", {
       message: "You have received a new Appointment request",
       data: new_appointment,
@@ -198,17 +199,82 @@ io.on("connection", async (socket) => {
     });
   });
 
+  const isToday = (date) => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
   socket.on("send_message", async (data) => {
     // const { from, to, text,type } = data;
     const to_id = data.to;
     const from_id = data.from;
-    // console.log("data", data);
-    const message = await OneToOneMessage.create(data);
-    // console.log("message:", message);
+
     const to = await User.findById(to_id).select("socket_id");
     const from = await User.findById(from_id).select("socket_id");
+
+    const existing_conversations = await OneToOneMessage.find({
+      $or: [
+        { from: from_id, to: to_id },
+        { from: to_id, to: from_id },
+      ],
+    });
+    console.log(existing_conversations);
+    if (existing_conversations.length !== 0) {
+      const len = existing_conversations.length;
+
+      const last_conversation_time = new Date(
+        existing_conversations[existing_conversations.length - 1].created_at
+      );
+
+      if (!isToday(last_conversation_time)) {
+        const message = await OneToOneMessage.create({
+          to: to_id,
+          from: from_id,
+          type: "divider",
+        });
+        console.log("The last conversation time is not today.");
+
+        io.to(to?.socket_id).emit("got_new_message", {
+          message: "New message is received",
+          status: "success",
+          data: { message },
+        });
+
+        io.to(from?.socket_id).emit("got_new_message", {
+          message: "Message sent successfully",
+          status: "success",
+          data: { message },
+        });
+      }
+    } else {
+      const message = await OneToOneMessage.create({
+        to: to_id,
+        from: from_id,
+        type: "Divider",
+        text: Date.now(),
+      });
+      console.log("The last conversation time is not today.");
+
+      io.to(to?.socket_id).emit("got_new_message", {
+        message: "New message is received",
+        status: "success",
+        data: message,
+      });
+
+      io.to(from?.socket_id).emit("got_new_message", {
+        message: "Message sent successfully",
+        status: "success",
+        data: message,
+      });
+    }
+    const message = await OneToOneMessage.create(data);
+
     // console.log("user_to", to, from);
-    //TODO if B is not the friend then push it
+
     const user_to = await User.findById({ _id: to_id });
     //
     console.log("user_to", to_id);
@@ -218,8 +284,9 @@ io.on("connection", async (socket) => {
     console.log("index", index);
     if (index === -1) {
       const updated_to = await User.findByIdAndUpdate(
-        { _id: to_id },
-        { friends: { $push: ObjectId(from_id) } }
+        to_id, // Directly pass the ID
+        { $push: { friends: from_id } }, // Correct syntax for $push
+        { new: true } // Option to return the updated document
       );
 
       io.to(to?.socket_id).emit("new_friend_added", {
@@ -228,13 +295,11 @@ io.on("connection", async (socket) => {
         data: updated_to,
       });
     }
-    console.log("new message", {
-      ...message._doc,
-      incoming: true,
-      outgoing: false,
-    });
-
-    console.log(Date.now());
+    // console.log("new message", {
+    //   ...message._doc,
+    //   incoming: true,
+    //   outgoing: false,
+    // });
 
     io.to(to?.socket_id).emit("got_new_message", {
       message: "New message is received",
