@@ -21,6 +21,7 @@ const { Server } = require("socket.io");
 
 const User = require("./models/user");
 const Appointment = require("./models/appointment");
+const OneToOneMessage = require("./models/OneToOneMessages");
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -195,6 +196,75 @@ io.on("connection", async (socket) => {
       status: "success",
       data: updated_appointment,
     });
+  });
+
+  socket.on("send_message", async (data) => {
+    // const { from, to, text,type } = data;
+    const to_id = data.to;
+    const from_id = data.from;
+    // console.log("data", data);
+    const message = await OneToOneMessage.create(data);
+    // console.log("message:", message);
+    const to = await User.findById(to_id).select("socket_id");
+    const from = await User.findById(from_id).select("socket_id");
+    // console.log("user_to", to, from);
+    //TODO if B is not the friend then push it
+    const user_to = await User.findById({ _id: to_id });
+    //
+    console.log("user_to", to_id);
+    const index = user_to.friends.findIndex((el) => {
+      return el.toString() === from_id;
+    });
+    console.log("index", index);
+    if (index === -1) {
+      const updated_to = await User.findByIdAndUpdate(
+        { _id: to_id },
+        { friends: { $push: ObjectId(from_id) } }
+      );
+
+      io.to(to?.socket_id).emit("new_friend_added", {
+        message: "New friend is added",
+        status: "success",
+        data: updated_to,
+      });
+    }
+    console.log("new message", {
+      ...message._doc,
+      incoming: true,
+      outgoing: false,
+    });
+
+    console.log(Date.now());
+
+    io.to(to?.socket_id).emit("got_new_message", {
+      message: "New message is received",
+      status: "success",
+      data: { ...message._doc, incoming: true, outgoing: false },
+    });
+
+    io.to(from?.socket_id).emit("got_new_message", {
+      message: "Message sent successfully",
+      status: "success",
+      data: { ...message._doc, incoming: false, outgoing: true },
+    });
+  });
+
+  socket.on("get_conversations", async (data, callback) => {
+    const my_id = data.id;
+    const friend_id = data.friend_id;
+    // console.log("my_id: ", my_id);
+    // console.log("frined_id: ", friend_id);
+    const sentConversations = await OneToOneMessage.find({
+      from: my_id,
+      to: friend_id,
+    });
+    const receivedConversation = await OneToOneMessage.find({
+      from: friend_id,
+      to: my_id,
+    });
+    // console.log("sentconversations", sentConversations);
+    // console.log("recieved converstions", receivedConversation);
+    callback({ sent: sentConversations, received: receivedConversation });
   });
 
   // socket.on("request_toget_myfriends", async (data) => {
