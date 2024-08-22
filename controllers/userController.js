@@ -54,11 +54,11 @@ exports.getMyFriends = async (req, res, next) => {
   const me = await User.findOne({ _id: my_id });
   const my_friends = me.friends; // Array of friend IDs
   // console.log("myfriends", my_friends);
-  const friendsData = await User.find({ _id: { $in: my_friends } }).select(
-    "_id name status socket_id"
-  );
+  const friendsData = await User.find({ _id: { $in: my_friends } })
+    .select("_id name status lastMessageId")
+    .populate("lastMessageId", "text created_at");
 
-  // console.log("myfriendData", friendsData);
+  console.log("myfriendData", friendsData);
 
   res.status(200).json({
     status: "success",

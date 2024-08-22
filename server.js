@@ -118,11 +118,37 @@ io.on("connection", async (socket) => {
 
   socket.on("appointment_request", async (data) => {
     console.log("data", data);
-    const to = await User.findById(data.to).select("socket_id");
     const from = await User.findById(data.from).select("socket_id");
+    if (data.to === 0) {
+      io.to(from?.socket_id).emit("request_sent", {
+        message: "All fields are required!",
+        status: "error",
+      });
+      return;
+    }
+    const to = await User.findById(data.to).select("socket_id");
 
     // save appointment to database
-    const new_appointment = await Appointment.create(data);
+    let new_appointment;
+    try {
+      new_appointment = await Appointment.create(data);
+    } catch (err) {
+      if (err.name === "ValidationError") {
+        io.to(from?.socket_id).emit("request_sent", {
+          message: "All fields are required!",
+          status: "error",
+        });
+      }
+      return;
+    }
+
+    if (!new_appointment) {
+      io.to(from?.socket_id).emit("request_sent", {
+        message: "Not able to handle this request. Please try after sometime",
+        status: "error",
+      });
+      return;
+    }
     // emit event request received to recipient
     console.log(new_appointment);
     io.to(to?.socket_id).emit("new_appointment_request", {
@@ -131,6 +157,7 @@ io.on("connection", async (socket) => {
     });
     io.to(from?.socket_id).emit("request_sent", {
       message: "Request Sent successfully!",
+      status: "success",
     });
   });
 
@@ -234,7 +261,7 @@ io.on("connection", async (socket) => {
         const message = await OneToOneMessage.create({
           to: to_id,
           from: from_id,
-          type: "divider",
+          type: "Divider",
         });
         console.log("The last conversation time is not today.");
 
@@ -311,6 +338,44 @@ io.on("connection", async (socket) => {
       message: "Message sent successfully",
       status: "success",
       data: { ...message._doc, incoming: false, outgoing: true },
+    });
+
+    //updation of friendData
+
+    const updated_to = await User.findByIdAndUpdate(
+      { _id: to_id },
+      { lastMessageId: message._id }
+    );
+
+    const updated_from = await User.findByIdAndUpdate(
+      { _id: from_id },
+      { lastMessageId: message._id }
+    );
+
+    io.to(to?.socket_id).emit("update_friendData", {
+      message: "New message is received",
+      status: "success",
+      data: {
+        id: from_id,
+        lastMessageId: {
+          _id: message._id,
+          text: message.text,
+          created_at: message.created_at,
+        },
+      },
+    });
+
+    io.to(from?.socket_id).emit("update_friendData", {
+      message: "Message sent successfully",
+      status: "success",
+      data: {
+        id: to_id,
+        lastMessageId: {
+          _id: message._id,
+          text: message.text,
+          created_at: message.created_at,
+        },
+      },
     });
   });
 

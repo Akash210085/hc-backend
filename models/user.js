@@ -84,6 +84,10 @@ const userSchema = new mongoose.Schema({
   designation: {
     type: String,
   },
+  lastMessageId: {
+    type: mongoose.Schema.ObjectId,
+    ref: "OneToOneMessage",
+  },
 });
 
 userSchema.pre("save", async function (next) {
