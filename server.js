@@ -300,8 +300,6 @@ io.on("connection", async (socket) => {
     }
     const message = await OneToOneMessage.create(data);
 
-    // console.log("user_to", to, from);
-
     const user_to = await User.findById({ _id: to_id });
     //
     console.log("user_to", to_id);
