@@ -164,7 +164,7 @@ io.on("connection", async (socket) => {
   socket.on("approve_reject_appointment", async (data) => {
     const { id, status } = data;
 
-    // console.log("appoint sfv:", data);
+    console.log("appoint approved or rejected:", data);
 
     const updated_appointment = await Appointment.findByIdAndUpdate(
       id,
@@ -200,7 +200,7 @@ io.on("connection", async (socket) => {
 
   socket.on("add_remark", async (data) => {
     const { id, remark } = data;
-    // console.log("this is data", data);
+    console.log("this is data", data);
     const updated_appointment = await Appointment.findByIdAndUpdate(
       id,
       { remark: remark },
